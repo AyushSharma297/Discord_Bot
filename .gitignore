@@ -40,3 +40,4 @@ dist/
 
 # --- Miscellaneous ---
 docs
+*chat_log.csv
