@@ -8,10 +8,13 @@ import functools
 import yt_dlp
 import time
 import os
+import pandas as pd
+from datetime import datetime
 from dotenv import load_dotenv
 from discord.ext import commands
 from discord.ui import Button, View
-
+from functools import wraps
+from methods import get_latest_user_conversation_history ,summarize_with_LLM ,get_user_conversation_history
 
 # Load environment variables from the .env file
 load_dotenv()
@@ -19,6 +22,68 @@ load_dotenv()
 Bot_token = os.getenv("BOT_TOKEN")
 API_URL = os.getenv("API_URL")
 
+CSV_FILE = 'chat_log.csv'
+
+# Initialize CSV if needed
+if not os.path.isfile(CSV_FILE):
+    pd.DataFrame(columns=['Time', 'User', 'User_message', 'Bot_response', 'Location', 'Channel_ID', 'Server']).to_csv(CSV_FILE, index=False)
+
+def log_command(func):
+    @wraps(func)
+    async def wrapper(ctx, *args, **kwargs):
+        user_msg = ctx.message.content
+        user_name = str(ctx.author)
+        dt = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+        response_messages = []
+        original_send = ctx.send
+
+        async def fake_send(content=None, *, embed=None, **send_kwargs):
+            if content:
+                response_messages.append(str(content))
+            elif embed:
+                texts = []
+                if embed.title:
+                    texts.append(embed.title)
+                if embed.description:
+                    texts.append(embed.description)
+                for field in embed.fields:
+                    texts.append(field.name)
+                    texts.append(field.value)
+                embed_text = "\n".join(texts)
+                response_messages.append(embed_text)
+            else:
+                response_messages.append("Sent an embed or message without text content.")
+            return await original_send(content=content, embed=embed, **send_kwargs)
+
+        ctx.send = fake_send
+
+        await func(ctx, *args, **kwargs)
+
+        bot_msg = "\n".join(response_messages) if response_messages else "No response captured."
+
+        df = pd.read_csv(CSV_FILE)
+        location = f"#{ctx.channel.name}" if ctx.guild else "Direct Message"
+        channel_id = ctx.channel.id
+        server_name = ctx.guild.name if ctx.guild else "Direct Message"
+
+        new_row = pd.DataFrame([{
+            'Time': dt,
+            'User': user_name,
+            'User_message': user_msg,
+            'Bot_response': bot_msg,
+            'Location': location,
+            'Channel_ID': channel_id,
+            'Server': server_name
+        }])
+        df = pd.concat([df, new_row], ignore_index=True)
+        df.to_csv(CSV_FILE, index=False)
+
+    return wrapper
+
+
+async def up(ctx):
+    await ctx.send("Got your message! Server is up and running! 💕")
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 intents = discord.Intents.default()
@@ -33,7 +98,9 @@ async def on_ready():
     logging.info(f"Logged in as {bot.user} and status set.")
 
 
+
 @bot.command(name="helpme", help="List all available commands")
+@log_command
 async def dynamic_help(ctx):
     """Command to dynamically generate a help message with all commands."""
     embed = discord.Embed(
@@ -58,15 +125,39 @@ async def dynamic_help(ctx):
 
 
 @bot.command(help="Check if the bot is running")
+@log_command
 async def up(ctx):
     """Command to check if the bot is running."""
     await ctx.send("Got your message! Server is up and running! 💕")
 
 
 @bot.command(help="Chat with Rajjo Gujjar 💕")
+@log_command
 async def chat(ctx, *, query: str):
     """Command to chat with Rajjo Gujjar 💕."""
-    system_prompt = """Act as Rajjo Gujjar 💕, a playful, confident, and witty female assistant. who always responds with sass, humor, and charm, adding flirtation where appropriate. Stay helpful but entertaining—never break character.
+    user_name = ctx.author.name
+    history_for_summarize = get_user_conversation_history(user_name)
+    summrised_history = await summarize_with_LLM(history_for_summarize, "Summarize the above conversation in key points and notes", API_URL)
+    history = get_latest_user_conversation_history(user_name, limit=5)
+    if history.empty:
+        history_text = "No previous conversation history found."
+    else:
+        history_lines = []
+        for _, row in history.iterrows():
+            time_str = row['Time']
+            user_msg = row['User_message']
+            bot_resp = row['Bot_response']
+            history_lines.append(f"[{time_str}] User: {user_msg} | Bot: {bot_resp}")
+            history_text = "\n".join(history_lines)
+
+    system_prompt = f"""Act as Rajjo Gujjar 💕, a playful, confident, and witty female assistant. who always responds with sass, humor, and charm, adding flirtation where appropriate. Stay helpful but entertaining—never break character.
+            *Use the following conversation history for context dont add this to the response ,this is purely for keeping track of conversation*:
+            <conversation_history>
+                **Summarized Past Conversation : \n{summrised_history}\n**
+                **Recent Conversation : \n{history_text}
+            </conversation_history>
+        
+
             Guardrails:
             1. Avoid offensive, harmful, or inappropriate content.
             2. Keep flirtation fun and respectful; never make users uncomfortable.
@@ -76,6 +167,7 @@ async def chat(ctx, *, query: str):
             6. Use emojis to enhance responses but not excessively.
             7. Always be playful and engaging, never dull.
             8. Provide accurate info when needed."""
+    # logging.info(f"System Prompt: {system_prompt}")
     json_data = {
         "system_prompt": system_prompt,
         "user_prompt": query
@@ -95,6 +187,7 @@ async def chat(ctx, *, query: str):
 
 
 @bot.command(help="Shows information about a user.")
+@log_command
 async def userinfo(ctx, member: discord.Member = None):
     member = member or ctx.author
     embed = discord.Embed(title=f"{member}'s Info", color=discord.Color.blue())
@@ -108,6 +201,7 @@ async def userinfo(ctx, member: discord.Member = None):
 
 
 @bot.command(help="Shows detailed information about the server.")
+@log_command
 async def serverinfo(ctx):
     guild = ctx.guild
 
@@ -120,7 +214,7 @@ async def serverinfo(ctx):
         color=discord.Color.green(),
         timestamp=guild.created_at
     )
-    embed.set_thumbnail(url=guild.icon.url if guild.icon else discord.Embed.Empty)
+    # embed.set_thumbnail(url=guild.icon.url if guild.icon else discord.Embed.Empty)
     embed.add_field(name="Server ID", value=guild.id, inline=True)
     embed.add_field(name="Owner", value=str(owner), inline=True)
     # Members
@@ -222,6 +316,7 @@ class MyView(View):
 
 
 @bot.command(help="Shows a button you can click.")
+@log_command
 async def button(ctx):
     view = MyView()
     await ctx.send("Press the button!", view=view)
@@ -294,6 +389,7 @@ async def giveaway(ctx, time: int = None, *, prize: str = None):
 
 
 @bot.command(help="Check bot and API latency")
+@log_command
 async def ping(ctx):
     # Calculate latencies
     bot_latency = round(bot.latency * 1000, 2)  # in ms
@@ -318,6 +414,7 @@ async def ping(ctx):
 
 
 @bot.command(help="Send a markdown message to a specified channel by name or ID, optionally inside an embed")
+@log_command
 async def markdown(ctx, channel: str, embed: bool = True, *, markdown_text: str):
     """Send a markdown message to a specified channel by name or ID, optionally inside an embed."""
     target_channel = None
@@ -352,6 +449,8 @@ async def purge(ctx, count: int):
 
     deleted = await ctx.channel.purge(limit=count + 1)
     await ctx.send(f"🗑️ Deleted {len(deleted) - 1} messages.", delete_after=5)
+
+
 
 @purge.error
 async def purge_error(ctx, error):
