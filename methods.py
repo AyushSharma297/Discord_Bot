@@ -1,83 +1,54 @@
 import pandas as pd
 import aiohttp
 import asyncio
+import aiosqlite
 
-def get_latest_user_conversation_history(user_name: str, source_csv='chat_log.csv', limit=5) -> pd.DataFrame:
+DB_FILE = 'data/chat_log.db'
+
+
+
+async def get_latest_user_conversation_history(user_name: str, limit=5) -> pd.DataFrame:
     """
-    Retrieve the latest conversation history (up to limit) for a user from the main CSV log.
+    Retrieve the latest conversation history (up to limit) for a user from the SQLite log.
 
     :param user_name: Discord username#discriminator, e.g. 'regil297#1234'
-    :param source_csv: Path to the main conversation CSV file
     :param limit: Number of latest conversation entries to retrieve
     :return: pandas DataFrame containing latest conversation rows for the user
     """
-    df = pd.read_csv(source_csv)
-
-    # Filter rows where 'User' exactly matches user_name
-    user_history = df[df['User'] == user_name]
-
-    if user_history.empty:
-        print(f"No conversation history found for user '{user_name}'.")
-        return user_history
-
-    # Convert 'Time' column to datetime for proper sorting
-    user_history['Time'] = pd.to_datetime(user_history['Time'], errors='coerce')
-
-    # Sort by Time descending and get the latest `limit` rows
-    latest_history = user_history.sort_values(by='Time', ascending=False).head(limit)
-
-    # Optional: Reset index and sort ascending if needed for readability
-    latest_history = latest_history.sort_values(by='Time').reset_index(drop=True)
-
-    return latest_history
+    async with aiosqlite.connect(DB_FILE) as db:
+        cursor = await db.execute(
+            "SELECT time, user, user_message, bot_response FROM chat_log WHERE user = ? ORDER BY time DESC LIMIT ?",
+            (user_name, limit)
+        )
+        rows = await cursor.fetchall()
+        if not rows:
+            print(f"No conversation history found for user '{user_name}'.")
+            return pd.DataFrame()
+        df = pd.DataFrame(rows, columns=['Time', 'User', 'User_message', 'Bot_response'])
+        df['Time'] = pd.to_datetime(df['Time'], errors='coerce')
+        df = df.sort_values(by='Time').reset_index(drop=True)
+        return df
 
 
-def get_user_conversation_history(user_name: str, source_csv='chat_log.csv') -> pd.DataFrame:
+
+async def get_user_conversation_history(user_name: str) -> pd.DataFrame:
     """
-    Retrieve full conversation history for a user from the main CSV log.
+    Retrieve full conversation history for a user from the SQLite log.
 
     :param user_name: Discord username#discriminator, e.g. 'regil297#1234'
-    :param source_csv: Path to the main conversation CSV file
     :return: pandas DataFrame containing conversation rows for the user
     """
-    df = pd.read_csv(source_csv)
-
-    # # Filter rows where 'User' exactly matches user_name
-    # user_history = df[df['User'] == user_name]
-    
-    user_history = df[df['User'] == user_name][['Time', 'User', 'Bot_response']]
-
-    if user_history.empty:
-        print(f"No conversation history found for user '{user_name}'.")
-    return user_history
-
-def save_user_conversation_history(user_name: str, server_name: str, source_csv='chat_log.csv', output_csv=None):
-    """
-    Extracts the conversation history of a specific user in a server from the main CSV log,
-    and saves it to a new CSV file.
-
-    :param user_name: Discord username#discriminator, e.g. 'regil297#1234'
-    :param server_name: The server (guild) name to filter by
-    :param source_csv: Path to the main conversation CSV file
-    :param output_csv: Optional output CSV filename; if None, defaults to '{user_name}_history.csv'
-    """
-    df = pd.read_csv(source_csv)
-
-    # Filter rows belonging to the user in the specified server
-    user_history = df[(df['User'] == user_name) & (df['Server'] == server_name)]
-
-    if user_history.empty:
-        print(f"No conversation history found for user '{user_name}' in server '{server_name}'.")
-        return
-
-    if output_csv is None:
-        safe_username = user_name.replace("#", "_")  # sanitize filename
-        safe_server = server_name.replace(" ", "_")
-        output_csv = f"{safe_username}_{safe_server}_history.csv"
-
-    user_history.to_csv(output_csv, index=False)
-    print(f"Saved conversation history to {output_csv}")
-
+    async with aiosqlite.connect(DB_FILE) as db:
+        cursor = await db.execute(
+            "SELECT time, user, bot_response FROM chat_log WHERE user = ? ORDER BY time ASC",
+            (user_name,)
+        )
+        rows = await cursor.fetchall()
+        if not rows:
+            print(f"No conversation history found for user '{user_name}'.")
+            return pd.DataFrame()
+        df = pd.DataFrame(rows, columns=['Time', 'User', 'Bot_response'])
+        return df
 
 
 async def summarize_with_LLM(history_text: str, user_prompt: str, api_url: str):
@@ -110,8 +81,6 @@ async def summarize_with_LLM(history_text: str, user_prompt: str, api_url: str):
             7. Always be playful and engaging, never dull.
             8. Provide accurate info when needed."""
 
-    # print("Summarize Prompt:", system_prompt)  # Debug print
-
     json_data = {
         "system_prompt": system_prompt,
         "user_prompt": user_prompt
@@ -123,9 +92,8 @@ async def summarize_with_LLM(history_text: str, user_prompt: str, api_url: str):
                 if resp.status == 200:
                     data = await resp.json()
                     responce = data.get("response", "No response field in API reply.")
-                    print("API Response:", responce)  # Debug print
+                    print("API Response:", responce)
                     return responce
-                
                 else:
                     return f"API returned error status {resp.status}"
         except Exception as e:

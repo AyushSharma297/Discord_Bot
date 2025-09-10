@@ -41,3 +41,5 @@ dist/
 # --- Miscellaneous ---
 docs
 *chat_log.csv
+data/
+*README-cogs.md

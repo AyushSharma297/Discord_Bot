@@ -1,0 +1,6 @@
+tiktoken>=0.5.0
+transformers>=4.30.0
+torch>=2.0.0
+huggingface-hub>=0.16.0
+sentencepiece>=0.1.99
+numpy>=1.21.0
