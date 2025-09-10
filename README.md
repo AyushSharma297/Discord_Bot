@@ -8,17 +8,8 @@
     alt="Rajjo Gujjar Bot Logo"
   >
 </h3>
-<div align="center">
-    <a href="LICENSE.md">
-      <img src="https://img.shields.io/github/license/AyushSharma297/discord-bot" alt="License">
-    </a>
-    <a href="https://yourwebsite.dev">
-      <img src="https://img.shields.io/badge/Visit-yourwebsite.dev-orange" alt="Visit Project Website">
-    </a>
-</div>
-<div>
   <p align="center">
-    <a href="https://www.linkedin.com/company/yourcompany">
+    <a href="https://www.linkedin.com/in/ayush-sharma-6ba328201/">
       <img src="https://img.shields.io/badge/Follow%20on%20LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white" alt="Follow on LinkedIn" />
     </a>
     <a href="https://discord.com/invite/yourdiscordinvite">
