@@ -9,7 +9,7 @@
   >
 </h3>
 <div align="center">
-    <a href="https://github.com/AyushSharma297/discord-bot/LICENSE.md">
+    <a href="LICENSE.md">
       <img src="https://img.shields.io/github/license/AyushSharma297/discord-bot" alt="License">
     </a>
     <a href="https://yourwebsite.dev">
