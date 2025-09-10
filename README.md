@@ -1,4 +1,31 @@
-# Rajjo Gujjar 💕 Discord Bot
+<h1 align="center">Rajjo Gujjar 💕 Discord Bot</h1>
+
+<h3 align="center">
+  <a name="readme-top"></a>
+  <img
+    src="assets/0834d774-f2ab-48a6-a42a-a01a976e7889 (1).png"
+    height="200"
+    alt="Rajjo Gujjar Bot Logo"
+  >
+</h3>
+<div align="center">
+    <a href="https://github.com/AyushSharma297/discord-bot/LICENSE.md">
+      <img src="https://img.shields.io/github/license/AyushSharma297/discord-bot" alt="License">
+    </a>
+    <a href="https://yourwebsite.dev">
+      <img src="https://img.shields.io/badge/Visit-yourwebsite.dev-orange" alt="Visit Project Website">
+    </a>
+</div>
+<div>
+  <p align="center">
+    <a href="https://www.linkedin.com/company/yourcompany">
+      <img src="https://img.shields.io/badge/Follow%20on%20LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white" alt="Follow on LinkedIn" />
+    </a>
+    <a href="https://discord.com/invite/yourdiscordinvite">
+      <img src="https://img.shields.io/badge/Join%20our%20Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Join our Discord" />
+    </a>
+  </p>
+</div>
 
 ## Overview
 
@@ -130,12 +157,6 @@ python main.py
 ## Contributing
 
 Contributions are welcome! Please open an issue or submit a pull request for improvements or new features. All contributions must follow the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).
-
----
-
-## License
-
-This project is licensed under the MIT License.
 
 ---
 
