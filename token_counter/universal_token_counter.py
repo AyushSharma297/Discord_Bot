@@ -308,7 +308,7 @@ if __name__ == "__main__":
     # Example usage
     counter = UniversalTokenCounter()
     
-    text = "Hello! This is a test message for token counting across different LLMs."
+    text = "Betaab hua? 😊 (Speechless?) Iwwwwwwwwwwwwwwwwwwwwwwqedwq qd 214 sd f321rf 'm doing fabulous, thanks for asking! My circuits are buzzing with excitement to chat with someone as charming as you. How about you? What's new in your world? 🌎💬 Want some tea and a chat? ☕️"
     
     print("=== Universal Token Counter Demo ===")
     

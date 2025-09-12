@@ -4,7 +4,7 @@ import platform
 from discord.ext import commands
 from discord import app_commands
 from discord.ui import Button, View
-from utils import log_command
+from utils.utility import log_command
 from typing import Optional
 
 class MyView(View):
@@ -14,8 +14,8 @@ class MyView(View):
     async def hello_button(self, interaction: discord.Interaction, button: Button):
         await interaction.response.send_message("Hello! 👋", ephemeral=True)
 
-class Utility(commands.Cog):
-    """Utility commands for the bot"""
+class Info(commands.Cog):
+    """Info commands for the bot"""
     
     def __init__(self, bot):
         self.bot = bot
@@ -84,6 +84,7 @@ class Utility(commands.Cog):
     
         # New slash command
     @app_commands.command(name="ping", description="Check bot and API latency")
+    @app_commands.guild_only()
     async def ping_slash(self, interaction: discord.Interaction):
         bot_latency = round(self.bot.latency * 1000, 2)  # in ms
         shard_id = interaction.guild.shard_id if interaction.guild and interaction.guild.shard_id is not None else 0
@@ -232,4 +233,5 @@ class Utility(commands.Cog):
         await ctx.send("Press the button!", view=view)
 
 async def setup(bot):
-    await bot.add_cog(Utility(bot))
+    await bot.add_cog(Info(bot))
+    

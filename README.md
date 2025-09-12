@@ -21,7 +21,7 @@
   <img src="https://img.shields.io/badge/language-Python-blue?style=for-the-badge" alt="Python" />
   <img src="https://img.shields.io/badge/files-12-green?style=for-the-badge" alt="Files" />
   <img src="https://img.shields.io/badge/folders-5-orange?style=for-the-badge" alt="Folders" />
-  <img src="https://img.shields.io/badge/lines-2350-yellow?style=for-the-badge" alt="Lines of Code" />
+  <img src="https://img.shields.io/badge/lines-2250-yellow?style=for-the-badge" alt="Lines of Code" />
   <img src="https://img.shields.io/badge/last%20updated-Sep%2011,%202025-blue?style=for-the-badge" alt="Last Updated" />
 </div>
 
@@ -127,7 +127,7 @@ python main.py
 
 ## Usage
 
-- Use `!helpme` in your Discord server to see all available commands.
+- Use `!help` in your Discord server to see all available commands.
 - Chat with Rajjo using `!chat <your message>`.
 - Moderate and manage your server with built-in utilities.
 - Play music, run giveaways, and enjoy fun games.

@@ -63,3 +63,25 @@ def log_command(func):
             await db.commit()
 
     return wrapper
+
+async def log_chat_to_db(ctx, user_message: str, bot_response: str):
+    """
+    Logs a chat interaction to the SQLite database.
+
+    Parameters:
+    - ctx: The command context, used to get user, channel, guild info
+    - user_message: The user's message text
+    - bot_response: The bot's final response text (can include concatenated embeds, etc.)
+    """
+    dt = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    user_name = str(ctx.author)
+    location = f"#{ctx.channel.name}" if ctx.guild else "Direct Message"
+    channel_id = ctx.channel.id
+    server_name = ctx.guild.name if ctx.guild else "Direct Message"
+
+    async with aiosqlite.connect(DB_FILE) as db:
+        await db.execute(
+            "INSERT INTO chat_log (time, user, user_message, bot_response, location, channel_id, server) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (dt, user_name, user_message, bot_response, location, channel_id, server_name)
+        )
+        await db.commit()

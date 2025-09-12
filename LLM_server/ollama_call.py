@@ -1,12 +1,11 @@
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
 import subprocess
 import logging
 import time
 import re
+import ollama
 from datetime import datetime
-
-app = FastAPI()
+from fastapi import FastAPI, HTTPException, APIRouter
+from pydantic import BaseModel, Field
 
 # Setup logging
 logging.basicConfig(
@@ -14,65 +13,143 @@ logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 
-class QueryRequest(BaseModel):
-    system_prompt: str
-    user_prompt: str
+# Initialize the FastAPI app
+app = FastAPI(
+    title="Ollama API Proxy",
+    description="A FastAPI application to interact with Ollama models.",
+    version="1.0.0"
+)
+
+# Define a router for organizing API endpoints
+api_router = APIRouter()
+
+# Pydantic models for request bodies
+class TextQueryRequest(BaseModel):
+    system_prompt: str = Field(..., description="The system's role or instructions for the model.")
+    user_prompt: str = Field(..., description="The user's query for the model.")
+
+class ImageQueryRequest(BaseModel):
+    system_prompt: str = Field(..., description="The system's role or instructions for the model.")
+    user_prompt: str = Field(..., description="The user's query about the image.")
+    image_base64: str = Field(..., description="The image data encoded in base64 format.")
 
 @app.post("/ollama_query/")
-async def ollama_query(request: QueryRequest):
-    model_name = "llama3.1:latest"  # fixed model
-    full_query = f"System: {request.system_prompt}\nUser: {request.user_prompt}"
+async def ollama_query(request: TextQueryRequest):
+    model_name = "llama3.1:latest"
     start_time = time.time()
 
     try:
-        result = subprocess.run(
-            ['ollama', 'run', model_name, full_query],
-            capture_output=True,
-            encoding='utf-8',
-            timeout=30
+        response = ollama.chat(
+            model=model_name,
+            messages=[
+                {'role': 'system', 'content': request.system_prompt},
+                {'role': 'user', 'content': request.user_prompt}
+            ]
         )
 
         end_time = time.time()
         elapsed_time = end_time - start_time
 
-        stdout = result.stdout.strip() if result.stdout else ""
-        stderr = result.stderr.strip() if result.stderr else ""
+        output = response['message']['content'].strip()
+        tokens_generated = response.get('total_duration') # Note: The ollama library doesn't return token count directly
 
-        # Log stdout and stderr
-        logging.info(f"Olaama stdout: {stdout}")
-        logging.info(f"Olaama stderr: {stderr}")
+        logging.info(f"response: {output}")
         logging.info(f"Elapsed time: {elapsed_time:.3f} seconds")
-
-        if result.returncode != 0:
-            raise HTTPException(status_code=500, detail=f"Olaama CLI error: {stderr}")
-
-        output = stdout
-        if not output:
-            output = "No response from Olaama model."
-
-        # Combine stdout and stderr to search for tokens info
-        combined_output = f"{stdout}\n{stderr}"
-
-        # Look for a pattern like "Tokens generated: 123"
-        match = re.search(r'Tokens generated:\s*(\d+)', combined_output)
-
-        # Extract token count or default to "N/A"
-        tokens_generated = int(match.group(1)) if match else "N/A"
 
         response_data = {
             "response": output,
             "elapsed_time_seconds": elapsed_time,
-            "tokens_generated": tokens_generated,
-            "timestamp": datetime.utcnow().isoformat() + "Z"
+            "tokens_generated": "N/A", # Or you could use 'total_duration' as a proxy
+            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "model": model_name
         }
-
-        logging.info(f"Response data: {response_data}")
 
         return response_data
 
-    except subprocess.TimeoutExpired:
-        logging.error("Olaama CLI timed out")
-        raise HTTPException(status_code=504, detail="Olaama CLI timed out")
+    except ollama.OllamaException as e:
+        logging.error(f"Ollama API error: {e}")
+        raise HTTPException(status_code=500, detail=f"Ollama API error: {e}")
     except Exception as e:
-        logging.error(f"Olaama CLI failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Olaama CLI failed: {e}")
+        logging.error(f"An unexpected error occurred: {e}")
+        raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {e}")
+
+
+
+@app.post("/ollama_img/")
+async def ollama_img(request: ImageQueryRequest):
+    """
+    Processes an image query using the Ollama `llama3.2-vision` model,
+    with a fallback to pull the model if it's not present.
+    """
+    model_name = "gemma3:4b" #"llama3.2-vision:latest"
+    
+    # This loop will run a maximum of two times (initial attempt + one retry)
+    for attempt in range(2):
+        start_time = time.time()
+        try:
+            # Correctly structure the messages for a multi-turn conversation
+            messages = [
+                {
+                    'role': 'system',
+                    'content': request.system_prompt
+                },
+                {
+                    'role': 'user',
+                    'content': request.user_prompt,
+                    'images': [request.image_base64]
+                }
+            ]
+            
+            response = ollama.chat(
+                model=model_name,
+                messages=messages,
+            )
+
+            end_time = time.time()
+            elapsed_time = end_time - start_time
+
+            if 'message' not in response or 'content' not in response['message']:
+                logging.error(f"Unexpected response format from Ollama: {response}")
+                raise HTTPException(status_code=500, detail="Unexpected response format from Ollama.")
+
+            output = response['message']['content'].strip()
+            # The ollama library doesn't expose token count directly in chat responses
+            tokens_generated = response.get('total_duration', 'N/A')
+
+            logging.info(f"Ollama response: {output}")
+            logging.info(f"Elapsed time: {elapsed_time:.3f} seconds")
+
+            response_data = {
+                "response": output,
+                "elapsed_time_seconds": elapsed_time,
+                "tokens_generated": tokens_generated,
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+                "full_response_object": response
+            }
+            return response_data
+
+        except ollama._types.ResponseError as e:
+            # Check for a specific error message indicating the model needs to be pulled.
+            if "not found" in str(e) or "no longer compatible" in str(e) and attempt == 0:
+                logging.info(f"Ollama model '{model_name}' not found.")
+    
+            else:
+                # If it's a different Ollama error or the second attempt, re-raise it
+                logging.error(f"Ollama API error: {e}")
+                raise HTTPException(status_code=500, detail=f"Ollama API error: {e}")
+                
+        except Exception as e:
+            # Handle any other unexpected exceptions
+            logging.error(f"An unexpected error occurred: {e}")
+            raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {e}")
+
+
+@app.get("/health/")
+async def health_check():
+    """
+    A simple health check endpoint.
+    """
+    return {"status": "ok"}
+
+# Include the router in the main FastAPI app
+app.include_router(api_router)
