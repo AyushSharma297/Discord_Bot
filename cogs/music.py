@@ -5,7 +5,7 @@ import lavalink
 import re
 from discord.ext import commands
 from discord.ui import Button, View
-from utils import log_command
+from utils.utility import log_command
 
 class MusicControls(discord.ui.View):
     def __init__(self, player, ctx):
@@ -356,3 +356,4 @@ class Music(commands.Cog):
 
 async def setup(bot):
     await bot.add_cog(Music(bot))
+    

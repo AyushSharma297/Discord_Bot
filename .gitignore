@@ -11,6 +11,8 @@ venv/
 ENV/
 env/
 .venv/
+*env
+LLM_server\.env
 
 # --- Environment Variables (Secrets) ---
 *.env
@@ -43,3 +45,6 @@ docs
 *chat_log.csv
 data/
 *README-cogs.md
+test.py
+lavalink
+light
