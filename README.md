@@ -82,7 +82,9 @@ Discord Bot/
 │   ├── events.py          # Event handlers
 │   └── roast.py           # Roasting commands
 ├── LLM_server/
-│   └── ollama_call.py     # FastAPI backend for LLM inference via Ollama
+│   ├── ollama_call.py     # FastAPI backend for LLM inference via Ollama
+│   ├── rag_call.py        # Calling Tool for LightRAG API  
+│   └── web_search.py      # Calling Tool for Web_Search API
 └── README.md              # Project documentation
 ```
 
@@ -213,7 +215,17 @@ python main.py
   </tr>
 </table>
 
-
+### 🤖 LightRAG UI Examples
+<table>
+  <tr>
+    <td><img src="assets\examples\light_rag1.png" alt="Additonal_example" width="250"/></td>
+    <td><img src="assets\examples\light_rag2.png" alt="Additonal_example2" width="250"/></td>
+  </tr>
+  <tr>
+    <td><img src="assets\examples\light_rag3.png" alt="Additonal_example" width="250"/></td>
+    <td><img src="assets\examples\light_rag4.png" alt="Additonal_example2" width="250"/></td>
+  </tr>
+</table>
 
 ---
 
