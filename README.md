@@ -92,7 +92,7 @@ Discord Bot/
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/discord-bot.git
+git clone https://github.com/AyushSharma297/Discord_Bot.git
 cd discord-bot
 ```
 
