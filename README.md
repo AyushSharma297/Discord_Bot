@@ -22,7 +22,7 @@
   <img src="https://img.shields.io/badge/files-12-green?style=for-the-badge" alt="Files" />
   <img src="https://img.shields.io/badge/folders-5-orange?style=for-the-badge" alt="Folders" />
   <img src="https://img.shields.io/badge/lines-2250-yellow?style=for-the-badge" alt="Lines of Code" />
-  <img src="https://img.shields.io/badge/last%20updated-Sep%2011,%202025-blue?style=for-the-badge" alt="Last Updated" />
+  <img src="https://img.shields.io/badge/last%20updated-Sep%2020,%202025-blue?style=for-the-badge" alt="Last Updated" />
 </div>
 
 
@@ -52,6 +52,7 @@ Rajjo Gujjar 💕 is a feature-rich, modular Discord bot designed for fun, engag
 - **discord.py** – Discord API wrapper
 - **aiohttp** – Async HTTP client
 - **FastAPI** – LLM API backend
+- **LightRAG** - Hybrid Graph RAG
 - **pandas** – Data manipulation and logging
 - **dotenv** – Environment variable management
 - **Lavalink** – Music playback
@@ -103,6 +104,7 @@ pip install -r requirements.txt
 ```
 or 
 
+>recommended 🤖 
 ```bash
 poetry install 
 ```
@@ -174,6 +176,47 @@ python main.py
 >>*Pro Tip: The help command will show you the exact syntax, required parameters, and optional arguments for each command, making it easy to use them correctly.*
 
 ---
+
+## 📸 Screen-Shots
+
+### 💬 Chat Command Examples
+<table>
+  <tr>
+    <td><img src="assets\examples\chat_example.png" alt="chat_example1" width="250"/></td>
+    <td><img src="assets\examples\chat_example2.png" alt="chat_example2" width="250"/></td>
+    <td><img src="assets\examples\chat_example3.png" alt="chat_example3" width="250"/></td>
+  </tr>
+</table>
+
+### 🖼️ Image Chat Command Examples
+<table>
+  <tr>
+    <td><img src="assets\examples\chat_img_example.png" alt="Image_example" width="300"/></td>
+  </tr>
+</table>
+
+### 🎉 Fun Command Examples
+<table>
+  <tr>
+    <td><img src="assets\examples\fun_example1.png" alt="Fun_example" width="250"/></td>
+    <td><img src="assets\examples\fun_example2.png" alt="Fun_example2" width="250"/></td>
+  </tr>
+</table>
+
+### ➕ Additional Command Examples
+<table>
+  <tr>
+    <td><img src="assets\examples\fun_example4.png" alt="Additonal_example" width="250"/></td>
+    <td><img src="assets\examples\logs_example.png" alt="Additonal_example2" width="250"/></td>
+    <td><img src="assets\examples\slash_ping.png" alt="Additonal_example" width="250"/></td>
+    <td><img src="assets\examples\info_example.png" alt="Additonal_example2" width="250"/></td>
+  </tr>
+</table>
+
+
+
+---
+
 ## Contributing
 
 Contributions are welcome! Please open an issue or submit a pull request for improvements or new features. All contributions must follow the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).
