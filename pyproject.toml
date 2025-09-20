@@ -1,0 +1,72 @@
+[project]
+name = "discord-bot"
+version = "0.1.0"
+description = "Discord bot with LLM integration"
+authors = [
+    {name = "AyushSharma297"}
+
+]
+
+license = {text = "MIT License"}
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "ddgs (>=9.6.0,<10.0.0)"
+]
+
+[tool.poetry]
+package-mode = false
+
+[tool.poetry.dependencies]
+# Discord Bot Dependencies
+discord = "*"
+python-dotenv = "*"
+aiohttp = "*"
+pandas = "*"
+aiosqlite = "*"
+gtts = "*"
+lavalink = "*"
+yt-dlp = "*"
+pyyaml = "*"
+beautifulsoup4 = "*"
+
+# LangGraph FastAPI Ollama Integration
+langchain-core = "*"
+langgraph = "*"
+langchain = "*"
+langchain-community = "*"
+langchain-ollama = "*"
+
+# FastAPI and Web Server
+fastapi = "*"
+uvicorn = "*"
+pydantic = "*"
+
+# Ollama Client
+ollama = "*"
+
+# Core Dependencies
+typing-extensions = "*"
+python-multipart = "*"
+httpx = "*"
+aiofiles = "*"
+
+# Audio and Media Processing
+PyNaCl = "*"
+
+# Reddit API for memes
+asyncpraw = "*"
+
+# Logging and Utilities
+python-json-logger = "*"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "*"
+black = "*"
+flake8 = "*"
+
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"

@@ -101,7 +101,11 @@ cd discord-bot
 ```bash
 pip install -r requirements.txt
 ```
+or 
 
+```bash
+poetry install 
+```
 ### 3. Configure Environment Variables
 
 Create a `.env` file in the project root:
@@ -109,12 +113,25 @@ Create a `.env` file in the project root:
 ```env
 BOT_TOKEN=your_discord_bot_token
 API_URL=http://localhost:8000/ollama_query/
+
+### More in env.example
 ```
 
-### 4. Start the FastAPI Backend
+### 4. Start the FastAPI Backend , LightRAG and Lavalink servers.
 
+`FastAPI Backend :`
 ```bash
 uvicorn LLM_server.ollama_call:app --host 0.0.0.0 --port 8000 --reload
+```
+
+`LightRAG :`
+```bash
+lightrag-server
+```
+
+`Lavalink :`
+```bash
+java -jar Lavalink.jar
 ```
 
 ### 5. Run the Discord Bot
@@ -152,8 +169,11 @@ python main.py
 | `!roulette [mode] [ante]`                | Play Russian Roulette game                                       |
 | `!meme [sort_type] [time_filter]`        | Get a random meme from Reddit                                    |
 
----
 
+>**Use the `!help` command in your Discord server to discover all available commands and their usage instructions.**
+>>*Pro Tip: The help command will show you the exact syntax, required parameters, and optional arguments for each command, making it easy to use them correctly.*
+
+---
 ## Contributing
 
 Contributions are welcome! Please open an issue or submit a pull request for improvements or new features. All contributions must follow the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).
