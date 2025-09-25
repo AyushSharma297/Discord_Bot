@@ -6,6 +6,7 @@ import yaml
 from gtts import gTTS
 from io import BytesIO
 from discord.ext import commands
+from discord import app_commands
 from methods import get_latest_user_conversation_history, get_and_summarize_conversation
 from utils.utility import log_command, log_chat_to_db
 import logging
@@ -34,7 +35,14 @@ class AIChat(commands.Cog):
                 return prompt.get("content")
         return None
 
-    @commands.command(help="Chat with Rajjo Gujjar 💕")
+    @commands.hybrid_command(
+        name="chat", 
+        description="Chat with Rajjo Gujjar 💕"
+    )
+    # 3. (Optional but recommended) Add a description for the argument
+    @app_commands.describe(
+        query="The message you want to send to Rajjo."
+    )
     async def chat(self, ctx, *, query: str):
         user_name = ctx.author.name
 
@@ -72,7 +80,7 @@ class AIChat(commands.Cog):
             history_text=history_text
         )
 
-        json_data = {"system_prompt": system_prompt, "user_prompt": query}
+        json_data = {"system_prompt": system_prompt, "user_prompt": query, "use_groq": True}
 
         try:
             async with aiohttp.ClientSession() as session:
@@ -80,7 +88,7 @@ class AIChat(commands.Cog):
                     resp.raise_for_status()
                     data = await resp.json()
                     response_text = data.get("response", "No response field in API reply.")
-                    model_name = data.get("model")
+                    model_name = data.get("model_used")
         except aiohttp.ClientResponseError as e:
             response_text = f"API returned error status {e.status}"
         except Exception as e:
@@ -120,7 +128,14 @@ class AIChat(commands.Cog):
         await response_message.edit(embed=success_embed)
         await log_chat_to_db(ctx, user_message=query, bot_response=response_text)
 
-    @commands.command(help="Make the bot speak using TTS in a voice channel")
+    @commands.hybrid_command(
+        name="speak", 
+        description="Wana hear Rajjo Gujjar 💕"
+    )
+
+    @app_commands.describe(
+        text="The message you want to send to Rajjo."
+    )
     @log_command
     async def speak(self, ctx, *, text=None):
         if not ctx.author.voice:
@@ -182,7 +197,14 @@ class AIChat(commands.Cog):
         except Exception as e:
             await ctx.send(f"❌ Error generating or playing TTS: {str(e)}")
 
-    @commands.command(name="chat_img", description="Chat with Rajjo Gujjar 💕 with attached image.")
+    @commands.hybrid_command(
+        name="chat_img", 
+        description="Chat with Rajjo Gujjar 💕 with attached image."
+    )
+    # 3. (Optional but recommended) Add a description for the argument
+    @app_commands.describe(
+        prompt="The message you want to send to Rajjo."
+    )
     async def ollama_img_command(self, ctx, *, prompt: str):
         if not ctx.message.attachments:
             error_embed = discord.Embed(
